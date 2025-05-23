@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Money Tracker</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #34495e;
+            font-weight: 600;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .login-link a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success-message {
+            color: #2ecc71;
+            text-align: center;
+            margin-bottom: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Register</h1>
+        <div id="error-message" class="error-message"></div>
+        <div id="success-message" class="success-message"></div>
+        <form id="register-form">
+            <div class="form-group">
+                <label for="name">Nama</label>
+                <input type="text" id="name" required placeholder="Masukkan nama lengkap">
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" required placeholder="Masukkan email">
+            </div>
+            <div class="form-group">
+                <label for="gender">Jenis Kelamin</label>
+                <select id="gender" required>
+                    <option value="">Pilih Jenis Kelamin</option>
+                    <option value="Laki-laki">Laki-laki</option>
+                    <option value="Perempuan">Perempuan</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required placeholder="Masukkan password">
+            </div>
+            <div class="form-group">
+                <label for="confirm-password">Konfirmasi Password</label>
+                <input type="password" id="confirm-password" required placeholder="Konfirmasi password">
+            </div>
+            <button type="submit">Daftar</button>
+        </form>
+        <div class="login-link">
+            Sudah punya akun? <a href="login.html">Login di sini</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const gender = document.getElementById('gender').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const errorMessage = document.getElementById('error-message');
+            const successMessage = document.getElementById('success-message');
+
+            // Reset messages
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+
+            // Validasi password
+            if (password !== confirmPassword) {
+                errorMessage.textContent = 'Password dan konfirmasi password tidak cocok!';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            // Validasi panjang password
+            if (password.length < 6) {
+                errorMessage.textContent = 'Password minimal 6 karakter!';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/users/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, email, gender, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Registrasi gagal');
+                }
+
+                // Tampilkan pesan sukses
+                successMessage.textContent = 'Registrasi berhasil! Silakan login.';
+                successMessage.style.display = 'block';
+
+                // Reset form
+                e.target.reset();
+
+                // Redirect ke halaman login setelah 2 detik
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+
+            } catch (error) {
+                errorMessage.textContent = error.message;
+                errorMessage.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html> 
