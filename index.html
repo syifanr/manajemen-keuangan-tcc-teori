@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Manajemen Keuangan Mahasiswa</title>
+  <style>
+    /* Reset & base */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      margin: 0; padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      background: white;
+      max-width: 480px;
+      width: 100%;
+      padding: 24px 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 16px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    label {
+      font-weight: 600;
+      color: #34495e;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    textarea {
+      padding: 10px 14px;
+      border: 1.5px solid #bdc3c7;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+      resize: vertical;
+      font-family: inherit;
+    }
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    input[type="date"]:focus,
+    textarea:focus {
+      border-color: #2980b9;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 80px;
+    }
+
+    button {
+      background-color: #2980b9;
+      color: white;
+      font-weight: 700;
+      font-size: 18px;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.25s;
+    }
+    button:hover {
+      background-color: #1f6391;
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+      margin-top: 24px;
+      max-height: 300px;
+      overflow-y: auto;
+      border-top: 1px solid #eee;
+    }
+    ul li {
+      background: #ecf0f1;
+      margin-bottom: 12px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+      font-size: 16px;
+      color: #2c3e50;
+    }
+
+    ul li strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 17px;
+      color: #34495e;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Manajemen Keuangan Mahasiswa</h1>
+
+    <h2>Tambah Transaksi</h2>
+    <form id="transaction-form" autocomplete="off">
+      <label for="user_id">User ID</label>
+      <input type="number" id="user_id" required placeholder="Masukkan User ID" min="1" />
+
+      <label for="title">Judul</label>
+      <input type="text" id="title" required placeholder="Judul transaksi" />
+
+      <label for="description">Deskripsi</label>
+      <textarea id="description" placeholder="Deskripsi (opsional)"></textarea>
+
+      <label for="amount">Jumlah Uang (Rp)</label>
+      <input type="number" id="amount" required placeholder="Misal: 150000" min="0.01" step="0.01" />
+
+      <label for="date">Tanggal</label>
+      <input type="date" id="date" required />
+
+      <button type="submit">Tambah</button>
+    </form>
+
+    <h2>Daftar Transaksi</h2>
+    <ul id="transaction-list"></ul>
+  </div>
+
+  <script>
+    async function fetchTransactions() {
+      try {
+        const res = await fetch("http://localhost:3000/api/transactions");
+        const data = await res.json();
+        const list = document.getElementById("transaction-list");
+        list.innerHTML = "";
+        data.forEach(tx => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <strong>${tx.title}</strong>
+            ${tx.description ? `<em>${tx.description}</em><br/>` : ""}
+            Jumlah: Rp${parseFloat(tx.amount).toLocaleString()}<br/>
+            Tanggal: ${new Date(tx.date).toLocaleDateString()}
+          `;
+          list.appendChild(li);
+        });
+      } catch (err) {
+        alert("Gagal mengambil data transaksi.");
+        console.error(err);
+      }
+    }
+
+    document.getElementById("transaction-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const user_id = document.getElementById("user_id").value.trim();
+      const title = document.getElementById("title").value.trim();
+      const description = document.getElementById("description").value.trim();
+      const amount = document.getElementById("amount").value.trim();
+      const date = document.getElementById("date").value;
+
+      if (!user_id || !title || !amount || !date) {
+        alert("Mohon isi semua data yang wajib.");
+        return;
+      }
+
+      try {
+        const res = await fetch("http://localhost:3000/api/transactions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id, title, description, amount, date }),
+        });
+
+        if (!res.ok) throw new Error("Gagal menyimpan data.");
+
+        // Reset form
+        e.target.reset();
+
+        // Refresh daftar transaksi
+        fetchTransactions();
+      } catch (err) {
+        alert("Gagal menambahkan transaksi.");
+        console.error(err);
+      }
+    });
+
+    // Load data transaksi saat pertama buka halaman
+    fetchTransactions();
+  </script>
+</body>
+</html>
