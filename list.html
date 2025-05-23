@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Daftar Transaksi - Manajemen Keuangan</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      background: #f9f9f9;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #2980b9;
+      margin-bottom: 12px;
+    }
+    #user-info {
+      text-align: center;
+      margin-bottom: 24px;
+      font-weight: 600;
+      font-size: 18px;
+      color: #34495e;
+    }
+    #total {
+      font-size: 22px;
+      font-weight: bold;
+      margin: 20px 0;
+      color: #2c3e50;
+      text-align: center;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+      max-height: 350px;
+      overflow-y: auto;
+      border-top: 1px solid #eee;
+    }
+    li {
+      background: white;
+      padding: 14px 18px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+      font-size: 16px;
+      color: #2c3e50;
+    }
+    li strong {
+      display: block;
+      font-size: 18px;
+      color: #34495e;
+      margin-bottom: 6px;
+    }
+    li small {
+      color: #7f8c8d;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <h1>Daftar Transaksi</h1>
+  <div id="user-info"></div>
+  <div id="total">Total: Rp 0</div>
+  <ul id="transaction-list"></ul>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const userId = params.get("user_id");
+
+    async function fetchTransactions() {
+      try {
+        const res = await fetch(`http://localhost:3000/api/transactions`);
+        const data = await res.json();
+
+        const userTxs = data.filter(tx => String(tx.user_id) === String(userId));
+        const list = document.getElementById("transaction-list");
+        const totalDiv = document.getElementById("total");
+        const userInfoDiv = document.getElementById("user-info");
+
+        list.innerHTML = "";
+        userInfoDiv.textContent = `User ID: ${userId}`;
+
+        if (userTxs.length === 0) {
+          list.innerHTML = "<li>Tidak ada transaksi untuk user ini.</li>";
+          totalDiv.textContent = "Total: Rp 0";
+          return;
+        }
+
+        const total = userTxs.reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
+        totalDiv.textContent = `Total: Rp ${total.toLocaleString('id-ID')}`;
+
+        userTxs.forEach(tx => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <strong>${tx.title}</strong>
+            ${tx.description ? `<small>${tx.description}</small><br>` : ""}
+            Jumlah: Rp ${parseFloat(tx.amount).toLocaleString('id-ID')}<br>
+            Tanggal: ${new Date(tx.date).toLocaleDateString('id-ID')}
+          `;
+          list.appendChild(li);
+        });
+
+      } catch (err) {
+        alert("Gagal mengambil data transaksi.");
+        console.error(err);
+      }
+    }
+
+    if (!userId) {
+      alert("User ID tidak ditemukan di URL");
+    } else {
+      fetchTransactions();
+    }
+  </script>
+</body>
+</html>
