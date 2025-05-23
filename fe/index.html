@@ -4,10 +4,6 @@
   <meta charset="UTF-8" />
   <title>Manajemen Keuangan Mahasiswa</title>
   <style>
-    /* Reset & base */
-    * {
-      box-sizing: border-box;
-    }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #f0f4f8;
@@ -22,197 +18,99 @@
       padding: 24px 32px;
       border-radius: 12px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-    }
-
-    h1, h2 {
-      text-align: center;
-      color: #2c3e50;
-      margin-bottom: 16px;
-    }
-
-    .user-info {
-      text-align: center;
-      margin-bottom: 20px;
-      padding: 10px;
-      background: #f8f9fa;
-      border-radius: 8px;
-    }
-
-    .logout-btn {
-      background: #e74c3c;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      margin-left: 10px;
-    }
-
-    .logout-btn:hover {
-      background: #c0392b;
-    }
-
-    form {
       display: flex;
       flex-direction: column;
+      min-height: 90vh;
+      position: relative;
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 24px;
+    }
+    #transaction-list {
+      flex-grow: 1;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 16px;
+      padding: 0;
+      list-style: none;
     }
-
-    label {
-      font-weight: 600;
-      color: #34495e;
-      margin-bottom: 6px;
-      display: block;
+    #transaction-list li {
+      background: #ecf0f1;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 14px;
+      color: #2c3e50;
     }
-
-    input[type="text"],
-    input[type="number"],
-    input[type="date"],
-    textarea,
-    select {
-      padding: 10px 14px;
-      border: 1.5px solid #bdc3c7;
-      border-radius: 8px;
+    #transaction-list li strong {
       font-size: 16px;
-      transition: border-color 0.3s;
-      resize: vertical;
-      font-family: inherit;
+      color: #34495e;
     }
-    input[type="text"]:focus,
-    input[type="number"]:focus,
-    input[type="date"]:focus,
-    textarea:focus,
-    select:focus {
-      border-color: #2980b9;
-      outline: none;
+    .transaction-type {
+      align-self: flex-start;
+      padding: 2px 8px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 12px;
+      color: white;
     }
-
-    textarea {
-      min-height: 80px;
+    .income {
+      background-color: #2ecc71;
     }
-
-    button {
+    .expense {
+      background-color: #e74c3c;
+    }
+    .btn-add {
+      margin-top: 24px;
+      padding: 14px;
+      font-size: 18px;
       background-color: #2980b9;
       color: white;
-      font-weight: 700;
-      font-size: 18px;
       border: none;
-      padding: 14px;
       border-radius: 10px;
       cursor: pointer;
       transition: background-color 0.25s;
     }
-    button:hover {
+    .btn-add:hover {
       background-color: #1f6391;
     }
-
-    ul {
-      list-style: none;
-      padding-left: 0;
-      margin-top: 24px;
-      max-height: 300px;
-      overflow-y: auto;
-      border-top: 1px solid #eee;
-    }
-    ul li {
-      background: #ecf0f1;
-      margin-bottom: 12px;
-      padding: 14px 18px;
-      border-radius: 10px;
-      box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
-      font-size: 16px;
-      color: #2c3e50;
-    }
-
-    ul li strong {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 17px;
-      color: #34495e;
-    }
-
-    .transaction-type {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 14px;
-      font-weight: 600;
-      margin-left: 8px;
-    }
-
-    .income {
-      background-color: #2ecc71;
-      color: white;
-    }
-
-    .expense {
+    #btnLogout {
+      position: absolute;
+      top: 20px;
+      right: 20px;
       background-color: #e74c3c;
+      border: none;
       color: white;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.25s;
     }
-
-    .error-message {
-      color: #e74c3c;
-      text-align: center;
-      margin-bottom: 1rem;
-      display: none;
+    #btnLogout:hover {
+      background-color: #c0392b;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Manajemen Keuangan Mahasiswa</h1>
-    
-    <div class="user-info">
-      <span id="user-name"></span>
-      <button class="logout-btn" onclick="logout()">Logout</button>
-    </div>
-
-    <div id="error-message" class="error-message"></div>
-
-    <h2>Tambah Transaksi</h2>
-    <form id="transaction-form" autocomplete="off">
-      <label for="title">Judul</label>
-      <input type="text" id="title" required placeholder="Judul transaksi" />
-
-      <label for="description">Deskripsi</label>
-      <textarea id="description" placeholder="Deskripsi (opsional)"></textarea>
-
-      <label for="amount">Jumlah Uang (Rp)</label>
-      <input type="number" id="amount" required placeholder="Misal: 150000" min="0.01" step="0.01" />
-
-      <label for="type">Tipe Transaksi</label>
-      <select id="type" required>
-        <option value="income">Pemasukan</option>
-        <option value="expense">Pengeluaran</option>
-      </select>
-
-      <label for="date">Tanggal</label>
-      <input type="date" id="date" required />
-
-      <button type="submit">Tambah</button>
-    </form>
-
-    <h2>Daftar Transaksi</h2>
+    <button id="btnLogout">Logout</button>
+    <h1>Daftar Transaksi</h1>
     <ul id="transaction-list"></ul>
+    <button class="btn-add" id="btnAdd">+ Tambah Transaksi</button>
   </div>
 
   <script>
-    // Cek autentikasi
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user'));
     
     if (!token || !user) {
-      window.location.href = 'login.html';
-    }
-
-    // Tampilkan nama user
-    document.getElementById('user-name').textContent = `Selamat datang, ${user.name}!`;
-
-    // Fungsi logout
-    function logout() {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
       window.location.href = 'login.html';
     }
 
@@ -226,7 +124,6 @@
         
         if (!res.ok) {
           if (res.status === 401) {
-            // Token expired atau tidak valid
             logout();
             return;
           }
@@ -244,71 +141,26 @@
           li.innerHTML = `
             <strong>${tx.judul}</strong>
             <span class="transaction-type ${typeClass}">${typeText}</span>
-            ${tx.deskripsi ? `<em>${tx.deskripsi}</em><br/>` : ""}
-            Jumlah: Rp${parseFloat(tx.nominal).toLocaleString()}<br/>
-            Tanggal: ${new Date(tx.tanggal).toLocaleDateString()}
+            ${tx.deskripsi ? `<div><em>${tx.deskripsi}</em></div>` : ""}
+            <div>Jumlah: Rp${parseFloat(tx.nominal).toLocaleString()}</div>
+            <div>Tanggal: ${new Date(tx.tanggal).toLocaleDateString()}</div>
           `;
           list.appendChild(li);
         });
       } catch (err) {
-        const errorMessage = document.getElementById('error-message');
-        errorMessage.textContent = err.message;
-        errorMessage.style.display = 'block';
+        alert(err.message);
         console.error(err);
       }
     }
 
-    document.getElementById("transaction-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const title = document.getElementById("title").value.trim();
-      const description = document.getElementById("description").value.trim();
-      const amount = document.getElementById("amount").value.trim();
-      const type = document.getElementById("type").value;
-      const date = document.getElementById("date").value;
+    document.getElementById('btnAdd').addEventListener('click', () => {
+      window.location.href = 'add.html';
+    });
 
-      if (!title || !amount || !date) {
-        const errorMessage = document.getElementById('error-message');
-        errorMessage.textContent = "Mohon isi semua data yang wajib.";
-        errorMessage.style.display = 'block';
-        return;
-      }
-
-      try {
-        const res = await fetch("http://localhost:3000/api/transactions", {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ 
-            judul: title, 
-            deskripsi: description, 
-            nominal: amount, 
-            tanggal: date,
-            tipe: type 
-          }),
-        });
-
-        if (!res.ok) {
-          if (res.status === 401) {
-            logout();
-            return;
-          }
-          throw new Error("Gagal menyimpan data.");
-        }
-
-        // Reset form
-        e.target.reset();
-        document.getElementById('error-message').style.display = 'none';
-
-        // Refresh daftar transaksi
-        fetchTransactions();
-      } catch (err) {
-        const errorMessage = document.getElementById('error-message');
-        errorMessage.textContent = err.message;
-        errorMessage.style.display = 'block';
-        console.error(err);
-      }
+    document.getElementById('btnLogout').addEventListener('click', () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = 'login.html';
     });
 
     // Load data transaksi saat pertama buka halaman
