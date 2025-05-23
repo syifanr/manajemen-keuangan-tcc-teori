@@ -2,12 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Manajemen Keuangan Mahasiswa</title>
+  <title>Input Transaksi - Manajemen Keuangan</title>
   <style>
-    /* Reset & base */
-    * {
-      box-sizing: border-box;
-    }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #f0f4f8;
@@ -23,29 +19,26 @@
       border-radius: 12px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.1);
     }
-
-    h1, h2 {
+    h1 {
       text-align: center;
       color: #2c3e50;
-      margin-bottom: 16px;
+      margin-bottom: 24px;
     }
-
     form {
       display: flex;
       flex-direction: column;
       gap: 16px;
     }
-
     label {
       font-weight: 600;
       color: #34495e;
       margin-bottom: 6px;
       display: block;
     }
-
     input[type="text"],
     input[type="number"],
     input[type="date"],
+    select,
     textarea {
       padding: 10px 14px;
       border: 1.5px solid #bdc3c7;
@@ -58,15 +51,14 @@
     input[type="text"]:focus,
     input[type="number"]:focus,
     input[type="date"]:focus,
+    select:focus,
     textarea:focus {
       border-color: #2980b9;
       outline: none;
     }
-
     textarea {
       min-height: 80px;
     }
-
     button {
       background-color: #2980b9;
       color: white;
@@ -81,91 +73,51 @@
     button:hover {
       background-color: #1f6391;
     }
-
-    ul {
-      list-style: none;
-      padding-left: 0;
-      margin-top: 24px;
-      max-height: 300px;
-      overflow-y: auto;
-      border-top: 1px solid #eee;
-    }
-    ul li {
-      background: #ecf0f1;
-      margin-bottom: 12px;
-      padding: 14px 18px;
-      border-radius: 10px;
-      box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
-      font-size: 16px;
-      color: #2c3e50;
-    }
-
-    ul li strong {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 17px;
-      color: #34495e;
-    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Manajemen Keuangan Mahasiswa</h1>
-
-    <h2>Tambah Transaksi</h2>
+    <h1>Tambah Transaksi</h1>
     <form id="transaction-form" autocomplete="off">
-        
+      <label for="judul">Judul</label>
+      <input type="text" id="judul" required placeholder="Judul transaksi" />
 
-      <label for="title">Judul</label>
-      <input type="text" id="title" required placeholder="Judul transaksi" />
+      <label for="deskripsi">Deskripsi</label>
+      <textarea id="deskripsi" placeholder="Deskripsi (opsional)"></textarea>
 
-      <label for="description">Deskripsi</label>
-      <textarea id="description" placeholder="Deskripsi (opsional)"></textarea>
+      <label for="nominal">Jumlah Uang (Rp)</label>
+      <input type="number" id="nominal" required placeholder="Misal: 150000" min="0.01" step="0.01" />
 
-      <label for="amount">Jumlah Uang (Rp)</label>
-      <input type="number" id="amount" required placeholder="Misal: 150000" min="0.01" step="0.01" />
+      <label for="tipe">Tipe Transaksi</label>
+      <select id="tipe" required>
+        <option value="income">Pemasukan</option>
+        <option value="expense">Pengeluaran</option>
+      </select>
 
-      <label for="date">Tanggal</label>
-      <input type="date" id="date" required />
+      <label for="tanggal">Tanggal</label>
+      <input type="date" id="tanggal" required />
 
       <button type="submit">Tambah</button>
     </form>
-
-    
   </div>
 
   <script>
-    async function fetchTransactions() {
-      try {
-        const res = await fetch("http://localhost:3000/api/transactions");
-        const data = await res.json();
-        const list = document.getElementById("transaction-list");
-        list.innerHTML = "";
-        data.forEach(tx => {
-          const li = document.createElement("li");
-          li.innerHTML = `
-            <strong>${tx.title}</strong>
-            ${tx.description ? `<em>${tx.description}</em><br/>` : ""}
-            Jumlah: Rp${parseFloat(tx.amount).toLocaleString()}<br/>
-            Tanggal: ${new Date(tx.date).toLocaleDateString()}
-          `;
-          list.appendChild(li);
-        });
-      } catch (err) {
-        alert("Gagal mengambil data transaksi.");
-        console.error(err);
-      }
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Silakan login dulu!');
+      // window.location.href = 'login.html';
     }
 
     document.getElementById("transaction-form").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const user_id = document.getElementById("user_id").value.trim();
-      const title = document.getElementById("title").value.trim();
-      const description = document.getElementById("description").value.trim();
-      const amount = document.getElementById("amount").value.trim();
-      const date = document.getElementById("date").value;
 
-      if (!user_id || !title || !amount || !date) {
+      const judul = document.getElementById("judul").value.trim();
+      const deskripsi = document.getElementById("deskripsi").value.trim();
+      const nominal = document.getElementById("nominal").value.trim();
+      const tipe = document.getElementById("tipe").value;
+      const tanggal = document.getElementById("tanggal").value;
+
+      if (!judul || !nominal || !tanggal) {
         alert("Mohon isi semua data yang wajib.");
         return;
       }
@@ -173,25 +125,30 @@
       try {
         const res = await fetch("http://localhost:3000/api/transactions", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id, title, description, amount, date }),
+          headers: { 
+            "Content-Type": "application/json",
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ judul, deskripsi, nominal, tanggal, tipe }),
         });
 
-        if (!res.ok) throw new Error("Gagal menyimpan data.");
+        if (!res.ok) {
+          if (res.status === 401) {
+            alert('Session habis, silakan login ulang');
+            // window.location.href = 'login.html';
+            return;
+          }
+          throw new Error("Gagal menyimpan data.");
+        }
 
-        // Reset form
-        e.target.reset();
+        // Setelah sukses, kembali ke halaman daftar
+        window.location.href = 'list.html';
 
-        // Refresh daftar transaksi
-        fetchTransactions();
       } catch (err) {
-        alert("Gagal menambahkan transaksi.");
+        alert(err.message);
         console.error(err);
       }
     });
-
-    // Load data transaksi saat pertama buka halaman
-    fetchTransactions();
   </script>
 </body>
 </html>
