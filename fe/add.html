@@ -2,12 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Tambah Transaksi - Manajemen Keuangan Mahasiswa</title>
+  <title>Tambah/Edit Transaksi - Manajemen Keuangan Mahasiswa</title>
   <style>
-    /* Reset & base */
-    * {
-      box-sizing: border-box;
-    }
+    /* (Gunakan style sama seperti sebelumnya) */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #f0f4f8;
@@ -22,12 +19,12 @@
       padding: 24px 32px;
       border-radius: 12px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      overflow: hidden;
     }
-
-    h1, h2 {
+    h1 {
       text-align: center;
       color: #2c3e50;
-      margin-bottom: 16px;
+      margin-bottom: 24px;
     }
 
     .user-info {
@@ -116,58 +113,67 @@
       display: none;
     }
 
+    .button-container {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
     .back-btn {
       background: #95a5a6;
       color: white;
       border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
+      padding: 14px;
+      border-radius: 10px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 18px;
+      font-weight: 700;
+      flex: 1;
     }
 
     .back-btn:hover {
       background: #7f8c8d;
     }
+
+    #submit-btn {
+      flex: 1;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Tambah Transaksi</h1>
-    
-    <div class="user-info">
-      <button class="back-btn" onclick="window.location.href='index.html'">Kembali</button>
-      <button class="logout-btn" onclick="logout()">Logout</button>
-    </div>
-
+    <h1 id="form-title">Tambah Transaksi</h1>
     <div id="error-message" class="error-message"></div>
 
-
     <form id="transaction-form" autocomplete="off">
-      <label for="title">Judul</label>
-      <input type="text" id="title" required placeholder="Judul transaksi" />
+      <label for="judul">Judul</label>
+      <input type="text" id="judul" required placeholder="Judul transaksi" />
 
-      <label for="description">Deskripsi</label>
-      <textarea id="description" placeholder="Deskripsi (opsional)"></textarea>
+      <label for="deskripsi">Deskripsi</label>
+      <textarea id="deskripsi" placeholder="Deskripsi (opsional)"></textarea>
 
-      <label for="amount">Jumlah Uang (Rp)</label>
-      <input type="number" id="amount" required placeholder="Misal: 150000" min="0.01" step="0.01" />
+      <label for="nominal">Jumlah Uang (Rp)</label>
+      <input type="number" id="nominal" required placeholder="Misal: 150000" min="0.01" step="0.01" />
 
-      <label for="type">Tipe Transaksi</label>
-      <select id="type" required>
+      <label for="tipe">Tipe Transaksi</label>
+      <select id="tipe" required>
         <option value="income">Pemasukan</option>
         <option value="expense">Pengeluaran</option>
       </select>
 
-      <label for="date">Tanggal</label>
-      <input type="date" id="date" required />
+      <label for="tanggal">Tanggal</label>
+      <input type="date" id="tanggal" required />
 
-      <button type="submit">Tambah</button>
+      <div class="button-container">
+        <button type="button" class="back-btn" onclick="window.location.href='index.html'">Kembali</button>
+        <button type="submit" id="submit-btn">Tambah</button>
+      </div>
     </form>
   </div>
 
   <script>
-    // Cek autentikasi
+
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user'));
     
@@ -175,65 +181,98 @@
       window.location.href = 'login.html';
     }
 
-    // Fungsi logout
-    function logout() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('id');
+
+    if(editId){
+      document.getElementById('form-title').textContent = 'Edit Transaksi';
+      document.getElementById('submit-btn').textContent = 'Simpan Perubahan';
+
+      // Load data transaksi untuk di-edit
+      fetch(`http://localhost:3000/api/transactions/${editId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(res => {
+        if(!res.ok) throw new Error('Gagal mengambil data transaksi');
+        return res.json();
+      })
+      .then(data => {
+        document.getElementById('judul').value = data.judul;
+        document.getElementById('deskripsi').value = data.deskripsi || '';
+        document.getElementById('nominal').value = data.nominal;
+        document.getElementById('tipe').value = data.tipe;
+        document.getElementById('tanggal').value = data.tanggal.split('T')[0];
+      })
+      .catch(err => {
+        alert(err.message);
+        window.location.href = 'index.html';
+      });
+    }
+
+    function logout(){
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = 'login.html';
     }
 
-    document.getElementById("transaction-form").addEventListener("submit", async (e) => {
+    document.getElementById('transaction-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const title = document.getElementById("title").value.trim();
-      const description = document.getElementById("description").value.trim();
-      const amount = document.getElementById("amount").value.trim();
-      const type = document.getElementById("type").value;
-      const date = document.getElementById("date").value;
 
-      if (!title || !amount || !date) {
+      const judul = document.getElementById('judul').value.trim();
+      const deskripsi = document.getElementById('deskripsi').value.trim();
+      const nominal = document.getElementById('nominal').value.trim();
+      const tipe = document.getElementById('tipe').value;
+      const tanggal = document.getElementById('tanggal').value;
+
+      if(!judul || !nominal || !tanggal){
         const errorMessage = document.getElementById('error-message');
-        errorMessage.textContent = "Mohon isi semua data yang wajib.";
+        errorMessage.textContent = 'Mohon isi semua data yang wajib.';
         errorMessage.style.display = 'block';
         return;
       }
 
+      const payload = {
+        judul, deskripsi, nominal, tipe, tanggal
+      };
+
+      let url = 'http://localhost:3000/api/transactions';
+      let method = 'POST';
+
+      if(editId){
+        url += `/${editId}`;
+        method = 'PUT';
+      }
+
       try {
-        const res = await fetch("http://localhost:3000/api/transactions", {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
+        const res = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ 
-            judul: title, 
-            deskripsi: description, 
-            nominal: amount, 
-            tanggal: date,
-            tipe: type 
-          }),
+          body: JSON.stringify(payload)
         });
 
-        if (!res.ok) {
-          if (res.status === 401) {
+        if(!res.ok){
+          if(res.status === 401){
             logout();
             return;
           }
-          throw new Error("Gagal menyimpan data.");
+          throw new Error('Gagal menyimpan data.');
         }
 
-        // Reset form
-        e.target.reset();
-        document.getElementById('error-message').style.display = 'none';
 
-        // Redirect ke halaman utama
+        
         window.location.href = 'index.html';
-      } catch (err) {
+
+      } catch(err){
         const errorMessage = document.getElementById('error-message');
         errorMessage.textContent = err.message;
         errorMessage.style.display = 'block';
         console.error(err);
       }
     });
+    
   </script>
 </body>
 </html>
