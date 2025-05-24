@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const userRoutes = require('./route/UserRoute');
 const transactionRoutes = require('./route/TransactionRoute');
+const mysqlPool = require('./config/database.js');
+const pgDb = require('./config/postgree.js');
 
 // Log environment variables
 console.log('Environment variables:', {
@@ -32,3 +34,13 @@ app.use((err, req, res, next) => {
 app.listen(port, () => {
     console.log(`Server berjalan di http://localhost:${port}`);
 }); 
+
+async function getTransactionFromMySQL() {
+  const [rows] = await mysqlPool.query('SELECT * FROM transaksi');
+  return rows;
+}
+
+async function getUsersFromPostgres() {
+  const res = await pgDb.query('SELECT * FROM users');
+  return res.rows;
+}

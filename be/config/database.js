@@ -2,7 +2,7 @@ const mysql = require('mysql2/promise');
 
 // Konfigurasi untuk koneksi lokal
 const pool = mysql.createPool({
-  host: 'localhost',
+  host: '35.202.244.144',
   user: 'root',
   password: '',
   database: 'keuangan',
@@ -25,3 +25,4 @@ const pool = mysql.createPool({
 */
 
 module.exports = pool; 
+
